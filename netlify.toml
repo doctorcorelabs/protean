@@ -2,14 +2,15 @@
   publish = "dist"
   command = "npm run build"
 
+[build.environment]
+  NODE_VERSION = "20"
+  SECRETS_SCAN_OMIT_PATHS = "package.json,package-lock.json"
+
 [[redirects]]
   from = "/api/*"
   to = "${VITE_API_URL}/:splat"
   status = 200
   force = true
-
-[build.environment]
-  NODE_VERSION = "20"
 
 
 [[headers]]
