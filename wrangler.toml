@@ -1,0 +1,16 @@
+name = "ai-molecular-research"
+main = "workers/index.ts"
+compatibility_date = "2023-12-01"
+
+[vars]
+GEMINI_API_KEY = ""
+
+[env.production]
+name = "ai-molecular-research"
+
+[[env.production.routes]]
+pattern = "ai-molecular-research.your-subdomain.workers.dev/*"
+
+# AI binding for Cloudflare AI
+[ai]
+binding = "AI"
