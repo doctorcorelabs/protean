@@ -1,7 +1,6 @@
 {
   "name": "ai-molecular-research-platform",
   "private": true,
-  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -41,4 +40,3 @@
     "wrangler": "^3.19.0"
   }
 }
-
