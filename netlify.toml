@@ -4,7 +4,8 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  SECRETS_SCAN_OMIT_PATHS = "package.json,package-lock.json"
+  SECRETS_SCAN_OMIT_PATHS = "package.json,package-lock.json,env.example"
+  SECRETS_SCAN_OMIT_KEYS = "VITE_APP_VERSION"
 
 [[redirects]]
   from = "/api/*"
