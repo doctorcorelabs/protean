@@ -4,7 +4,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://ai-molecular-research.daivanfebrijuansetiya.workers.dev/:splat"
+  to = "${VITE_API_URL}/:splat"
   status = 200
   force = true
 

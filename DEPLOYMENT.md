@@ -24,8 +24,7 @@ cp env.example .env
 2. Update the `.env` file with your configuration:
 ```env
 VITE_API_URL=https://your-worker-subdomain.workers.dev
-VITE_APP_NAME=AI Molecular Research Platform
-VITE_APP_VERSION=1.0.0
+# VITE_APP_NAME and VITE_APP_VERSION should be set in your Netlify environment variables
 ```
 
 ### 2. Cloudflare Workers Setup
@@ -308,5 +307,3 @@ If you encounter issues:
 ---
 
 Happy deploying! 🎉
-
-
