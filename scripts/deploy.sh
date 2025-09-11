@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# AI Molecular Research Platform - Deployment Script
+# Deployment Script
 
 set -e
 
@@ -116,7 +116,7 @@ deploy_netlify() {
 
 # Main deployment function
 main() {
-    echo "🧬 AI Molecular Research Platform Deployment"
+    echo "🧬 Deployment"
     echo "=============================================="
     
     # Parse command line arguments
@@ -184,5 +184,3 @@ main() {
 
 # Run main function
 main "$@"
-
-

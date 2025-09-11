@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-REM AI Molecular Research Platform - Windows Deployment Script
+REM Windows Deployment Script
 
 echo 🚀 Starting deployment process...
 
@@ -83,5 +83,3 @@ echo 1. Update your domain settings in Netlify dashboard
 echo 2. Configure environment variables
 echo 3. Test all functionality
 echo 4. Share your platform with researchers!
-
-

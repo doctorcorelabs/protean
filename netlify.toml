@@ -11,6 +11,10 @@
 [build.environment]
   NODE_VERSION = "20"
 
+[secrets]
+  # Ignore VITE_APP_VERSION as it's not a true secret
+  omit_keys = ["VITE_APP_VERSION"]
+
 [[headers]]
   for = "/*"
   [headers.values]
