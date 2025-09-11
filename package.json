@@ -1,6 +1,7 @@
 {
   "name": "ai-molecular-research-platform",
   "private": true,
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,8 +13,8 @@
   },
   "dependencies": {
     "@google/genai": "^1.18.0",
-    "@react-three/drei": "^9.88.13",
-    "@react-three/fiber": "^8.15.11",
+    "@react-three/drei": "^10.7.5",
+    "@react-three/fiber": "^9.3.0",
     "@tailwindcss/typography": "^0.5.16",
     "clsx": "^2.0.0",
     "framer-motion": "^10.16.4",
@@ -24,7 +25,7 @@
     "react-markdown": "^10.1.0",
     "react-router-dom": "^6.8.1",
     "tailwind-merge": "^2.0.0",
-    "three": "^0.158.0"
+    "three": "^0.180.0"
   },
   "devDependencies": {
     "@types/node": "^24.3.1",
