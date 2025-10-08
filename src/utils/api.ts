@@ -1,6 +1,8 @@
 // API utility functions
 
-const API_BASE_URL = 'https://ai-molecular-research.your-subdomain.workers.dev'
+// Prefer relative path so platform redirects proxy to the Worker.
+// Optional override via VITE_API_BASE_URL for direct Worker access.
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) || ''
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
