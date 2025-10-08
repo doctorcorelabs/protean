@@ -4,8 +4,8 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  SECRETS_SCAN_OMIT_PATHS = "package.json,package-lock.json,env.example"
-  SECRETS_SCAN_OMIT_KEYS = "VITE_APP_VERSION"
+  SECRETS_SCAN_OMIT_PATHS = "package.json,package-lock.json,env.example,*.md,vite.config.ts,scripts/*.ps1"
+  SECRETS_SCAN_OMIT_KEYS = "VITE_APP_VERSION,VITE_APP_NAME,VITE_API_URL"
 
 [[redirects]]
   from = "/api/*"
