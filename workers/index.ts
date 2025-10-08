@@ -26,6 +26,15 @@ export default {
         return await handleGeminiRequest(request, env, corsHeaders);
       }
 
+      // RCSB proxy endpoints to avoid browser CORS issues
+      if (path.startsWith('/api/rcsb/')) {
+        // Map /api/rcsb/rest/v1/* -> https://data.rcsb.org/rest/v1/*
+        // Map /api/rcsb/graphql -> https://data.rcsb.org/graphql
+        // Map /api/rcsb/files/* -> https://files.rcsb.org/*
+        // Map /api/rcsb-search -> https://search.rcsb.org/rcsbsearch/v2/query
+        return await proxyRCSB(request, corsHeaders);
+      }
+
       switch (path) {
         case '/api/health':
           return new Response(JSON.stringify({ status: 'healthy', timestamp: new Date().toISOString() }), {
@@ -129,6 +138,65 @@ async function handleGeminiRequest(request: Request, env: Env, corsHeaders: any)
     return new Response(JSON.stringify({ error: 'Failed to get response from Gemini', details: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function proxyRCSB(request: Request, corsHeaders: any): Promise<Response> {
+  const url = new URL(request.url);
+  const path = url.pathname;
+
+  let target: string | null = null;
+  if (path.startsWith('/api/rcsb/rest/')) {
+    // Strip /api/rcsb and forward to data.rcsb.org
+    const restPath = path.replace('/api/rcsb', ''); // now /rest/v1/...
+    target = `https://data.rcsb.org${restPath}${url.search}`;
+  } else if (path === '/api/rcsb/graphql') {
+    target = 'https://data.rcsb.org/graphql';
+  } else if (path.startsWith('/api/rcsb/files/')) {
+    const filesPath = path.replace('/api/rcsb/files', '');
+    target = `https://files.rcsb.org${filesPath}${url.search}`;
+  } else if (path === '/api/rcsb-search') {
+    target = 'https://search.rcsb.org/rcsbsearch/v2/query';
+  }
+
+  if (!target) {
+    return new Response(JSON.stringify({ error: 'Invalid RCSB proxy path' }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Build outbound request
+  const init: RequestInit = {
+    method: request.method,
+    // Forward headers except host
+    headers: new Headers(
+      [...request.headers].filter(([name]) => name.toLowerCase() !== 'host')
+    ),
+    body: ['GET', 'HEAD'].includes(request.method) ? undefined : await request.arrayBuffer(),
+    redirect: 'follow',
+  };
+
+  try {
+    const resp = await fetch(target, init);
+
+    // Stream back the response with permissive CORS
+    const responseHeaders = new Headers(resp.headers);
+    responseHeaders.set('Access-Control-Allow-Origin', '*');
+    responseHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    responseHeaders.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    return new Response(resp.body, {
+      status: resp.status,
+      statusText: resp.statusText,
+      headers: responseHeaders,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Fetch failed';
+    return new Response(JSON.stringify({ error: 'Proxy request failed', details: message, target }), {
+      status: 502,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 }

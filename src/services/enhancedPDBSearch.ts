@@ -1,8 +1,9 @@
 // Enhanced PDB Search Service with Real API Integration
 // Documentation: https://data.rcsb.org/
 
-const PDB_API_BASE = 'https://data.rcsb.org/rest/v1'
-const PDB_SEARCH_API = 'https://search.rcsb.org/rcsbsearch/v2/query'
+// Use worker proxy to eliminate browser CORS failures
+const PDB_API_BASE = '/api/rcsb/rest/v1'
+const PDB_SEARCH_API = '/api/rcsb-search'
 
 export interface SearchQuery {
   naturalQuery?: string

@@ -1,8 +1,9 @@
 // RCSB PDB Data API Service
 // Documentation: https://data.rcsb.org/
 
-const PDB_API_BASE = 'https://data.rcsb.org/rest/v1'
-const PDB_GRAPHQL_BASE = 'https://data.rcsb.org/graphql'
+// Route via our worker proxy to avoid intermittent browser CORS failures
+const PDB_API_BASE = '/api/rcsb/rest/v1'
+const PDB_GRAPHQL_BASE = '/api/rcsb/graphql'
 
 export interface PDBEntry {
   rcsb_id: string
@@ -320,11 +321,13 @@ export class PDBApiService {
 
   // Get PDB file URL
   static getPDBFileUrl(pdbId: string): string {
-    return `https://files.rcsb.org/download/${pdbId}.pdb`
+    // Use proxy path that the worker maps to files.rcsb.org
+    return `/api/rcsb/files/download/${pdbId}.pdb`
   }
 
   // Get structure image URL
   static getStructureImageUrl(pdbId: string, size = 'medium'): string {
+    // Images are CDN and usually CORS-safe; keep direct URL
     return `https://cdn.rcsb.org/images/structures/${pdbId.toLowerCase()}_${size}.jpg`
   }
 

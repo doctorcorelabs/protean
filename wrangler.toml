@@ -10,8 +10,13 @@ compatibility_date = "2023-12-01"
 [env.production]
 name = "ai-molecular-research"
 
-[[env.production.routes]]
-pattern = "ai-molecular-research.your-subdomain.workers.dev/*"
+# Workers.dev deployments do not need routes; remove invalid pattern
+
+# Ensure env-specific vars/ai blocks exist (not inherited from top-level)
+[env.production.vars]
+
+[env.production.ai]
+binding = "AI"
 
 # AI binding for Cloudflare AI
 [ai]
