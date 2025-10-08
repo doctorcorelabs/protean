@@ -84,7 +84,7 @@ export interface PDBStructureData {
 export class PDBApiService {
   // Internal: robust JSON fetch with proxy->direct fallback and light retry
   private static async fetchJsonWithFallback(proxyUrl: string, directUrl: string, init?: RequestInit): Promise<any> {
-    const attempts = [proxyUrl, directUrl, proxyUrl]
+    const attempts = [directUrl, proxyUrl, directUrl]
     let lastError: any = null
     for (let i = 0; i < attempts.length; i++) {
       const url = attempts[i]
@@ -190,7 +190,7 @@ export class PDBApiService {
       body,
     }
 
-    const attempts = [PDB_GRAPHQL_BASE, PDB_GRAPHQL_DIRECT, PDB_GRAPHQL_BASE]
+    const attempts = [PDB_GRAPHQL_DIRECT, PDB_GRAPHQL_BASE, PDB_GRAPHQL_DIRECT]
     let lastErr: any = null
     for (let i = 0; i < attempts.length; i++) {
       try {
@@ -364,9 +364,9 @@ export class PDBApiService {
   // Fetch raw PDB text with proxy->direct fallback
   static async fetchPDBText(pdbId: string): Promise<string> {
     const attempts = [
-      `${PDB_FILES_PROXY_BASE}/download/${pdbId}.pdb`,
       `${PDB_FILES_DIRECT_BASE}/download/${pdbId}.pdb`,
       `${PDB_FILES_PROXY_BASE}/download/${pdbId}.pdb`,
+      `${PDB_FILES_DIRECT_BASE}/download/${pdbId}.pdb`,
     ]
     let lastErr: any = null
     for (let i = 0; i < attempts.length; i++) {
