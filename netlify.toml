@@ -9,7 +9,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://ai-molecular-research.doctorcorelabs.workers.dev/api/:splat"
+  to = "https://ai-molecular-research.daivanfebrijuansetiya.workers.dev/api/:splat"
   status = 200
   force = true
   headers = {X-From = "Netlify"}
