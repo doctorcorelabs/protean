@@ -122,3 +122,8 @@ public
 .pnp.*
 
 wrangler.toml
+
+
+# Local development env file (Cloudflare Workers)
+.dev.vars
+

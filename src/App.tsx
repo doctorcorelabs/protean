@@ -10,8 +10,13 @@ import AIAnalysis from './components/molecular/AIAnalysis'
 import PDBSearch from './components/molecular/PDBSearch'
 // ...existing code...
 import Footer from './components/layout/Footer'
+// Removed Turnstile verification page
+
+import { useState, useEffect } from 'react';
 
 function App() {
+  // Removed Turnstile gating; app renders directly
+
   return (
     <Router>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
@@ -37,7 +42,7 @@ function App() {
         <Footer />
       </div>
     </Router>
-  )
+  );
 }
 
 export default App

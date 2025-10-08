@@ -31,8 +31,12 @@ export default {
           return new Response(JSON.stringify({ status: 'healthy', timestamp: new Date().toISOString() }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
+        case '/':
+          return new Response(JSON.stringify({ message: 'AI Molecular Research Worker API', status: 'running' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
         default:
-          return new Response(JSON.stringify({ error: 'Not Found' }), {
+          return new Response(JSON.stringify({ error: 'Not Found', path: path }), {
             status: 404,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
@@ -47,6 +51,7 @@ export default {
   }
 }
 
+
 async function handleGeminiRequest(request: Request, env: Env, corsHeaders: any): Promise<Response> {
   if (!env.GEMINI_API_KEY) {
     return new Response(JSON.stringify({ error: 'GEMINI_API_KEY is not configured' }), {
@@ -55,9 +60,9 @@ async function handleGeminiRequest(request: Request, env: Env, corsHeaders: any)
     });
   }
 
-  const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
-  
-  const model = 'gemini-1.5-flash-latest';
+  const ai = new GoogleGenAI({
+    apiKey: env.GEMINI_API_KEY,
+  });
 
   let requestBody;
   try {
@@ -90,6 +95,7 @@ async function handleGeminiRequest(request: Request, env: Env, corsHeaders: any)
   ];
 
   try {
+    const model = 'gemini-2.5-flash-lite';
     const response = await ai.models.generateContentStream({
       model,
       contents,
@@ -126,4 +132,3 @@ async function handleGeminiRequest(request: Request, env: Env, corsHeaders: any)
     });
   }
 }
-

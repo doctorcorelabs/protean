@@ -48,6 +48,8 @@
     text-decoration: none !important;
   }
 
+  /* Removed Turnstile-specific styles */
+
   .markdown-content em, 
   .markdown-content i {
     font-style: italic !important;

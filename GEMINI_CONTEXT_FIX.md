@@ -146,3 +146,8 @@ Output Gemini sekarang akan:
 - Memberikan konteks yang spesifik untuk setiap fitur
 
 Sistem sekarang memberikan output yang linear, terstruktur, dan sesuai dengan konteks protein untuk semua fitur aplikasi DNA.
+
+
+
+
+

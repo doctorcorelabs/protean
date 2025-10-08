@@ -3,7 +3,9 @@ main = "workers/index.ts"
 compatibility_date = "2023-12-01"
 
 [vars]
-GEMINI_API_KEY = ""
+# Environment variables will be loaded from .dev.vars for local development
+# For production, set these via Cloudflare dashboard or wrangler secret commands
+# Removed TURNSTILE_SECRET_KEY; no longer required
 
 [env.production]
 name = "ai-molecular-research"

@@ -14,6 +14,13 @@
   force = true
 
 
+[[redirects]]
+  # SPA fallback: send all non-file routes to index.html
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+
 [[headers]]
   for = "/*"
   [headers.values]

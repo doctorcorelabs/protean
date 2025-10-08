@@ -256,7 +256,7 @@ This protein belongs to a family of related structures in the PDB:
 - **Evolutionary Analysis**: Phylogenetic reconstruction
 - **Drug Discovery**: Binding site and druggability analysis`;
 
-  // ...existing code...
+      case 'dna':
         return `## DNA Structure Analysis: ${pdbDescription}
 
 **DNA Structure Overview:**
