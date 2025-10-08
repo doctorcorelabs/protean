@@ -127,16 +127,13 @@ const MolecularViewer: React.FC = () => {
         setPdbData(structureData)
         console.log('Structure data loaded:', structureData)
         
-        // Fetch PDB string from RCSB
-        const pdbUrl = PDBApiService.getPDBFileUrl(selectedPdbId)
-        console.log('Fetching PDB string from:', pdbUrl)
-        const response = await fetch(pdbUrl)
-        if (response.ok) {
-          const pdbText = await response.text()
+        // Fetch PDB string with proxy->direct fallback
+        try {
+          const pdbText = await PDBApiService.fetchPDBText(selectedPdbId)
           setPdbString(pdbText)
           console.log('PDB string loaded, length:', pdbText.length)
-        } else {
-          console.error('Failed to fetch PDB string:', response.status)
+        } catch (e) {
+          console.error('Failed to fetch PDB string:', e)
           setPdbString(null)
         }
       }

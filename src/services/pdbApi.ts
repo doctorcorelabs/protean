@@ -1,9 +1,13 @@
 // RCSB PDB Data API Service
 // Documentation: https://data.rcsb.org/
 
-// Route via our worker proxy to avoid intermittent browser CORS failures
+// Route via our worker proxy; fall back to direct RCSB origins if proxy hiccups
 const PDB_API_BASE = '/api/rcsb/rest/v1'
 const PDB_GRAPHQL_BASE = '/api/rcsb/graphql'
+const PDB_API_DIRECT_BASE = 'https://data.rcsb.org/rest/v1'
+const PDB_GRAPHQL_DIRECT = 'https://data.rcsb.org/graphql'
+const PDB_FILES_PROXY_BASE = '/api/rcsb/files'
+const PDB_FILES_DIRECT_BASE = 'https://files.rcsb.org'
 
 export interface PDBEntry {
   rcsb_id: string
@@ -78,6 +82,26 @@ export interface PDBStructureData {
 }
 
 export class PDBApiService {
+  // Internal: robust JSON fetch with proxy->direct fallback and light retry
+  private static async fetchJsonWithFallback(proxyUrl: string, directUrl: string, init?: RequestInit): Promise<any> {
+    const attempts = [proxyUrl, directUrl, proxyUrl]
+    let lastError: any = null
+    for (let i = 0; i < attempts.length; i++) {
+      const url = attempts[i]
+      try {
+        const response = await fetch(url, init)
+        if (response.ok) {
+          return await response.json()
+        }
+        lastError = new Error(`${response.status} ${response.statusText}`)
+      } catch (err) {
+        lastError = err
+      }
+      // brief jitter before retry (non-blocking precision not required)
+      await new Promise(res => setTimeout(res, i === attempts.length - 1 ? 0 : 150))
+    }
+    throw lastError || new Error('Unknown network error')
+  }
   // Search functionality
   static async searchStructures(query: string, limit = 10): Promise<{ pdbId: string, title: string }[]> {
     try {
@@ -130,61 +154,63 @@ export class PDBApiService {
   }
   // REST API Methods
   static async getEntry(pdbId: string): Promise<PDBEntry> {
-    const response = await fetch(`${PDB_API_BASE}/core/entry/${pdbId}`)
-    if (!response.ok) {
-      throw new Error(`Failed to fetch entry ${pdbId}: ${response.statusText}`)
-    }
-    return response.json()
+    return this.fetchJsonWithFallback(
+      `${PDB_API_BASE}/core/entry/${pdbId}`,
+      `${PDB_API_DIRECT_BASE}/core/entry/${pdbId}`
+    )
   }
 
   static async getPolymerEntity(pdbId: string, entityId: string): Promise<PolymerEntity> {
-    const response = await fetch(`${PDB_API_BASE}/core/polymer_entity/${pdbId}/${entityId}`)
-    if (!response.ok) {
-      throw new Error(`Failed to fetch polymer entity ${pdbId}/${entityId}: ${response.statusText}`)
-    }
-    return response.json()
+    return this.fetchJsonWithFallback(
+      `${PDB_API_BASE}/core/polymer_entity/${pdbId}/${entityId}`,
+      `${PDB_API_DIRECT_BASE}/core/polymer_entity/${pdbId}/${entityId}`
+    )
   }
 
   static async getPolymerEntityInstance(pdbId: string, chainId: string): Promise<PolymerEntityInstance> {
-    const response = await fetch(`${PDB_API_BASE}/core/polymer_entity_instance/${pdbId}/${chainId}`)
-    if (!response.ok) {
-      throw new Error(`Failed to fetch polymer entity instance ${pdbId}/${chainId}: ${response.statusText}`)
-    }
-    return response.json()
+    return this.fetchJsonWithFallback(
+      `${PDB_API_BASE}/core/polymer_entity_instance/${pdbId}/${chainId}`,
+      `${PDB_API_DIRECT_BASE}/core/polymer_entity_instance/${pdbId}/${chainId}`
+    )
   }
 
   static async getChemicalComponent(compId: string): Promise<ChemicalComponent> {
-    const response = await fetch(`${PDB_API_BASE}/core/chem_comp/${compId}`)
-    if (!response.ok) {
-      throw new Error(`Failed to fetch chemical component ${compId}: ${response.statusText}`)
-    }
-    return response.json()
+    return this.fetchJsonWithFallback(
+      `${PDB_API_BASE}/core/chem_comp/${compId}`,
+      `${PDB_API_DIRECT_BASE}/core/chem_comp/${compId}`
+    )
   }
 
   // GraphQL API Methods
   static async graphqlQuery(query: string, variables?: Record<string, any>): Promise<any> {
-    const response = await fetch(PDB_GRAPHQL_BASE, {
+    const body = JSON.stringify({ query, variables })
+    const init: RequestInit = {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query,
-        variables,
-      }),
-    })
-
-    if (!response.ok) {
-      throw new Error(`GraphQL query failed: ${response.statusText}`)
+      headers: { 'Content-Type': 'application/json' },
+      body,
     }
 
-    const result = await response.json()
-    
-    if (result.errors) {
-      throw new Error(`GraphQL errors: ${result.errors.map((e: any) => e.message).join(', ')}`)
+    const attempts = [PDB_GRAPHQL_BASE, PDB_GRAPHQL_DIRECT, PDB_GRAPHQL_BASE]
+    let lastErr: any = null
+    for (let i = 0; i < attempts.length; i++) {
+      try {
+        const resp = await fetch(attempts[i], init)
+        if (!resp.ok) {
+          lastErr = new Error(`${resp.status} ${resp.statusText}`)
+        } else {
+          const result = await resp.json()
+          if (result.errors) {
+            lastErr = new Error(result.errors.map((e: any) => e.message).join(', '))
+          } else {
+            return result.data
+          }
+        }
+      } catch (e) {
+        lastErr = e
+      }
+      await new Promise(res => setTimeout(res, i === attempts.length - 1 ? 0 : 150))
     }
-
-    return result.data
+    throw new Error(`GraphQL query failed: ${lastErr}`)
   }
 
   // Complex queries using GraphQL
@@ -322,13 +348,36 @@ export class PDBApiService {
   // Get PDB file URL
   static getPDBFileUrl(pdbId: string): string {
     // Use proxy path that the worker maps to files.rcsb.org
-    return `/api/rcsb/files/download/${pdbId}.pdb`
+    return `${PDB_FILES_PROXY_BASE}/download/${pdbId}.pdb`
   }
 
   // Get structure image URL
   static getStructureImageUrl(pdbId: string, size = 'medium'): string {
     // Images are CDN and usually CORS-safe; keep direct URL
     return `https://cdn.rcsb.org/images/structures/${pdbId.toLowerCase()}_${size}.jpg`
+  }
+
+  // Fetch raw PDB text with proxy->direct fallback
+  static async fetchPDBText(pdbId: string): Promise<string> {
+    const attempts = [
+      `${PDB_FILES_PROXY_BASE}/download/${pdbId}.pdb`,
+      `${PDB_FILES_DIRECT_BASE}/download/${pdbId}.pdb`,
+      `${PDB_FILES_PROXY_BASE}/download/${pdbId}.pdb`,
+    ]
+    let lastErr: any = null
+    for (let i = 0; i < attempts.length; i++) {
+      try {
+        const resp = await fetch(attempts[i])
+        if (resp.ok) {
+          return await resp.text()
+        }
+        lastErr = new Error(`${resp.status} ${resp.statusText}`)
+      } catch (e) {
+        lastErr = e
+      }
+      await new Promise(res => setTimeout(res, i === attempts.length - 1 ? 0 : 150))
+    }
+    throw new Error(`Failed to fetch PDB file for ${pdbId}: ${lastErr}`)
   }
 
   // Validate PDB ID
