@@ -1,11 +1,8 @@
 // src/services/geminiService.ts
 
-// Support both env var names used across configs
-// Prefer VITE_API_BASE_URL, fall back to VITE_API_URL, else use relative (so Netlify redirects can proxy)
-const API_BASE_URL =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
-  (import.meta.env.VITE_API_URL as string | undefined) ||
-  '';
+// Base URL for API calls. Prefer relative path so platform redirects can proxy.
+// Optional override via VITE_API_BASE_URL; do NOT reference VITE_API_URL here to avoid leaking it into the bundle.
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) || '';
 
 // Context templates for each feature
 const FEATURE_CONTEXTS = {
