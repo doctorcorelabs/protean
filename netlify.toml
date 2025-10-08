@@ -9,9 +9,10 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "${VITE_API_URL}/api/:splat"
+  to = "https://ai-molecular-research.doctorcorelabs.workers.dev/api/:splat"
   status = 200
   force = true
+  headers = {X-From = "Netlify"}
 
 
 [[redirects]]

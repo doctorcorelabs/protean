@@ -4,6 +4,40 @@
 // Optional override via VITE_API_BASE_URL; do NOT reference VITE_API_URL here to avoid leaking it into the bundle.
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) || '';
 
+// Cache for API health status (avoid repeated health checks)
+let apiHealthCache: { status: boolean; timestamp: number } | null = null;
+const HEALTH_CACHE_DURATION = 60000; // 60 seconds
+
+// Check API health with caching
+async function checkApiHealth(): Promise<boolean> {
+  const now = Date.now();
+  
+  // Return cached result if still valid
+  if (apiHealthCache && (now - apiHealthCache.timestamp) < HEALTH_CACHE_DURATION) {
+    return apiHealthCache.status;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/health`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(5000), // 5 second timeout
+    });
+    
+    const isHealthy = response.ok;
+    apiHealthCache = { status: isHealthy, timestamp: now };
+    
+    if (!isHealthy) {
+      console.warn('⚠️ API health check failed:', response.status, response.statusText);
+    }
+    
+    return isHealthy;
+  } catch (error) {
+    console.warn('⚠️ API health check error:', error instanceof Error ? error.message : 'Unknown error');
+    apiHealthCache = { status: false, timestamp: now };
+    return false;
+  }
+}
+
 // Context templates for each feature
 const FEATURE_CONTEXTS = {
   '3dviewer': `You are a molecular biology expert analyzing 3D protein structures. When users mention codes like "1crn", "4hhb", etc., these are PDB (Protein Data Bank) IDs referring to specific protein structures. Always interpret these in the context of protein structures, not academic credits or other meanings.
@@ -312,6 +346,16 @@ export async function streamGemini(
   onChunk: (text: string) => void
 ): Promise<void> {
   try {
+    // Check API health first (with caching to avoid repeated checks)
+    const isHealthy = await checkApiHealth();
+    
+    if (!isHealthy) {
+      console.warn('⚠️ API is not available. Using fallback response.');
+      console.warn('💡 Tip: Ensure the Cloudflare Worker is accessible');
+      console.warn('📍 Current API Base:', API_BASE_URL || 'relative path (proxied)');
+      throw new Error('API_UNAVAILABLE');
+    }
+
     // Add contextual information to the prompt
     const contextualPrompt = getContextualPrompt(feature, prompt);
     
@@ -321,10 +365,12 @@ export async function streamGemini(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ prompt: contextualPrompt }),
+      signal: AbortSignal.timeout(30000), // 30 second timeout
     });
 
     if (!response.ok) {
-      throw new Error(`API request failed: ${response.status}`);
+      const errorText = await response.text().catch(() => 'Unknown error');
+      throw new Error(`API request failed: ${response.status} - ${errorText}`);
     }
 
     if (!response.body) {
@@ -360,7 +406,18 @@ export async function streamGemini(
       }
     }
   } catch (error) {
-    console.warn('API request failed, using fallback response:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.warn('API request failed, using fallback response:', errorMessage);
+    
+    // Show user-friendly error message
+    if (errorMessage.includes('API_UNAVAILABLE') || errorMessage.includes('Failed to fetch')) {
+      onChunk('⚠️ **API Connection Issue**\n\n');
+      onChunk('The backend API is currently unavailable. ');
+      onChunk('Please ensure the Cloudflare Worker is running.\n\n');
+      onChunk('**To start the worker locally:**\n');
+      onChunk('```bash\nnpm run worker:dev\n```\n\n');
+      onChunk('**Below is a fallback response:**\n\n---\n\n');
+    }
     
     // Use fallback response
     const fallbackResponse = getFallbackResponse(feature, prompt);

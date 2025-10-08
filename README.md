@@ -36,8 +36,33 @@ cd DNA
 npm install
 ```
 
-3. Start development server
+3. Configure environment variables
 ```bash
+# Copy .env.example to .env (or use existing .env)
+# Default: uses deployed Cloudflare Worker
+VITE_API_URL=https://ai-molecular-research.daivanfebrijuansetiya.workers.dev
+```
+
+4. Start development server
+```bash
+npm run dev
+```
+
+### 🔌 Backend Options
+
+**Option 1: Use Deployed Worker (Recommended for Quick Start)**
+- The default `.env` is already configured to use the deployed Cloudflare Worker
+- No additional setup needed - just run `npm run dev`
+
+**Option 2: Run Local Worker (For Backend Development)**
+```bash
+# Terminal 1: Start Cloudflare Worker locally
+npm run worker:dev
+
+# Terminal 2: Update .env to use local worker
+# VITE_API_URL=http://localhost:8787
+
+# Terminal 2: Start frontend
 npm run dev
 ```
 

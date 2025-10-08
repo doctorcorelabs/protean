@@ -5,11 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:setup": "powershell -ExecutionPolicy Bypass -File ./scripts/dev.ps1",
+    "dev:full": "concurrently \"npm run worker:dev\" \"npm run dev\"",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "deploy": "netlify deploy --prod --dir=dist",
+    "deploy:full": "npm run worker:deploy && npm run build && npm run deploy",
     "worker:dev": "wrangler dev",
-    "worker:deploy": "wrangler deploy"
+    "worker:deploy": "wrangler deploy",
+    "check:api": "node -e \"fetch(process.env.VITE_API_URL + '/api/health').then(r => r.json()).then(console.log).catch(console.error)\""
   },
   "dependencies": {
     "@google/genai": "^1.19.0",
