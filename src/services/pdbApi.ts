@@ -315,31 +315,35 @@ export class PDBApiService {
     return data.chem_comps
   }
 
-  // Get complete structure data
+  // Get complete structure data (robust: entry is required; others are best-effort)
   static async getCompleteStructureData(pdbId: string): Promise<PDBStructureData> {
-    try {
-      // Get entry information
-      const entry = await this.getEntry(pdbId)
-      
-      // Get polymer entities
-      const entityIds = [`${pdbId}_1`] // Simplified - in real implementation, get from entry
-      const polymerEntities = await this.getPolymerEntityInfo(entityIds)
-      
-      // Get polymer entity instances
-      const instanceIds = [`${pdbId}.A`] // Simplified - in real implementation, get from entry
-      const polymerEntityInstances = await this.getPolymerInstanceInfo(instanceIds)
-      
-      // Get chemical components (if any)
-      const chemicalComponents: ChemicalComponent[] = []
+    // Entry (REST) is critical; fail if we cannot fetch it
+    const entry = await this.getEntry(pdbId)
 
-      return {
-        entry,
-        polymerEntities,
-        polymerEntityInstances,
-        chemicalComponents,
-      }
-    } catch (error) {
-      throw new Error(`Failed to get complete structure data for ${pdbId}: ${error}`)
+    // Best-effort GraphQL fetches
+    let polymerEntities: PolymerEntity[] = []
+    let polymerEntityInstances: PolymerEntityInstance[] = []
+    const chemicalComponents: ChemicalComponent[] = []
+
+    try {
+      const entityIds = [`${pdbId}_1`]
+      polymerEntities = await this.getPolymerEntityInfo(entityIds)
+    } catch (e) {
+      console.warn(`Polymer entities unavailable for ${pdbId}:`, e)
+    }
+
+    try {
+      const instanceIds = [`${pdbId}.A`]
+      polymerEntityInstances = await this.getPolymerInstanceInfo(instanceIds)
+    } catch (e) {
+      console.warn(`Polymer instances unavailable for ${pdbId}:`, e)
+    }
+
+    return {
+      entry,
+      polymerEntities,
+      polymerEntityInstances,
+      chemicalComponents,
     }
   }
 
