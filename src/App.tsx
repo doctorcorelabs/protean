@@ -12,7 +12,7 @@ import PDBSearch from './components/molecular/PDBSearch'
 import Footer from './components/layout/Footer'
 // Removed Turnstile verification page
 
-import { useState, useEffect } from 'react';
+// Removed unused React hooks to fix TypeScript build error
 
 function App() {
   // Removed Turnstile gating; app renders directly
